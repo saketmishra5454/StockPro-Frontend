@@ -1,0 +1,70 @@
+<div class="shell">
+  <aside class="sidebar glass-panel" [class.sidebar--collapsed]="collapsed()">
+    <div class="brand">
+      <div class="brand__mark">S</div>
+      <div class="brand__copy" *ngIf="!collapsed()">
+        <strong>StockPro</strong>
+        <span>Inventory OS</span>
+      </div>
+    </div>
+
+    <nav class="nav-list" aria-label="Primary navigation">
+      <a
+        *ngFor="let item of visibleNavigation()"
+        class="nav-item"
+        [routerLink]="item.route"
+        routerLinkActive="nav-item--active"
+        [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+        [attr.aria-label]="item.label"
+      >
+        <mat-icon fontSet="material-icons-round">{{ item.icon }}</mat-icon>
+        <span *ngIf="!collapsed()">{{ item.label }}</span>
+      </a>
+    </nav>
+  </aside>
+
+  <section class="workspace">
+    <header class="topbar glass-panel">
+      <button mat-icon-button type="button" aria-label="Toggle sidebar" (click)="toggleSidebar()">
+        <mat-icon fontSet="material-icons-round">menu_open</mat-icon>
+      </button>
+
+      <div class="search">
+        <mat-icon fontSet="material-icons-round">search</mat-icon>
+        <input type="search" placeholder="Search inventory, suppliers, orders" aria-label="Search StockPro">
+      </div>
+
+      <div class="topbar__actions">
+        <button mat-icon-button type="button" aria-label="Toggle theme" (click)="theme.toggle()">
+          <mat-icon fontSet="material-icons-round">{{ theme.mode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
+
+        <button mat-icon-button type="button" aria-label="Notifications">
+          <mat-icon fontSet="material-icons-round">notifications</mat-icon>
+        </button>
+
+        <ng-container *ngIf="user$ | async as user">
+          <button mat-button type="button" [matMenuTriggerFor]="profileMenu" class="profile-button">
+            <span>{{ user.name }}</span>
+            <mat-icon fontSet="material-icons-round">expand_more</mat-icon>
+          </button>
+
+          <mat-menu #profileMenu="matMenu">
+            <button mat-menu-item disabled>
+              <mat-icon fontSet="material-icons-round">badge</mat-icon>
+              <span>{{ user.role }}</span>
+            </button>
+            <button mat-menu-item type="button" (click)="logout()">
+              <mat-icon fontSet="material-icons-round">logout</mat-icon>
+              <span>Sign out</span>
+            </button>
+          </mat-menu>
+        </ng-container>
+      </div>
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </section>
+</div>

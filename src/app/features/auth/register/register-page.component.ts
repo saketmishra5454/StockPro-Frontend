@@ -1,0 +1,73 @@
+import { NgFor } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { finalize, switchMap } from 'rxjs';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { UserRole } from '@core/models/auth.models';
+import { AuthService } from '@core/services/auth.service';
+import { NotificationService } from '@core/services/notification.service';
+
+@Component({
+  selector: 'app-register-page',
+  standalone: true,
+  imports: [NgFor, ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  templateUrl: './register-page.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class RegisterPageComponent {
+  private readonly fb = inject(NonNullableFormBuilder);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationService);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly roles: UserRole[] = ['ADMIN', 'MANAGER', 'STAFF', 'OFFICER'];
+  readonly loading = signal(false);
+
+  readonly form = this.fb.group({
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    role: this.fb.control<UserRole>('STAFF', [Validators.required])
+  });
+
+  submit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.loading.set(true);
+    const { email, password, role } = this.form.getRawValue();
+
+    this.auth.register(this.form.getRawValue()).pipe(
+      switchMap(() => this.auth.login({ email, password })),
+      finalize(() => this.loading.set(false)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (response) => {
+        const nextRole = response.user?.role ?? this.auth.currentUser?.role ?? role;
+        this.notifications.success('Your StockPro workspace is ready.');
+        void this.router.navigateByUrl(this.redirectPathForRole(nextRole));
+      },
+      error: () => {
+        this.notifications.info('Account created if the email was available. Please sign in to continue.');
+      }
+    });
+  }
+
+  private redirectPathForRole(role: UserRole): string {
+    const roleHome: Record<UserRole, string> = {
+      ADMIN: '/admin',
+      MANAGER: '/dashboard',
+      STAFF: '/stock-movements',
+      OFFICER: '/purchase-orders'
+    };
+
+    return roleHome[role];
+  }
+}

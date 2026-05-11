@@ -1,0 +1,167 @@
+<app-page-header
+  title="Inventory Command Center"
+  description="Monitor inventory value, purchase exposure, warehouse health, and operational exceptions from one executive dashboard."
+>
+  <button mat-flat-button color="primary" type="button" class="!h-11 !rounded-xl">
+    <mat-icon fontSet="material-icons-round">download</mat-icon>
+    Export report
+  </button>
+</app-page-header>
+
+<div class="source-pill" [class.source-pill--live]="dataSource() === 'backend'">
+  <mat-icon fontSet="material-icons-round">{{ dataSource() === 'backend' ? 'cloud_done' : 'cloud_off' }}</mat-icon>
+  {{ dataSource() === 'backend' ? 'Connected to StockPro backend' : 'No live backend records returned yet' }}
+</div>
+
+<section class="dashboard-grid dashboard-grid--kpis">
+  @for (card of kpis(); track card.label; let index = $index) {
+    <article class="kpi-card glass-panel reveal" [style.animation-delay.ms]="index * 80">
+      <div class="kpi-card__top">
+        <span>{{ card.label }}</span>
+        <div class="kpi-card__icon" [ngClass]="'tone-' + card.tone">
+          <mat-icon fontSet="material-icons-round">{{ card.icon }}</mat-icon>
+        </div>
+      </div>
+      <strong>{{ card.value }}</strong>
+      <div class="kpi-card__footer">
+        <span>{{ card.trend }}</span>
+        <small>{{ card.detail }}</small>
+      </div>
+    </article>
+  }
+</section>
+
+<section class="dashboard-grid dashboard-grid--charts">
+  <article class="dashboard-panel glass-panel reveal">
+    <div class="panel-heading">
+      <div>
+        <span class="panel-heading__eyebrow">Financial view</span>
+        <h2>Stock Value Trend</h2>
+      </div>
+      <mat-chip-set aria-label="Stock value range">
+        <mat-chip highlighted>7 months</mat-chip>
+      </mat-chip-set>
+    </div>
+
+    <div class="chart-box chart-box--line">
+      <canvas
+        baseChart
+        [type]="'line'"
+        [data]="stockValueChartData()"
+        [options]="stockValueChartOptions"
+      ></canvas>
+    </div>
+  </article>
+
+  <article class="dashboard-panel glass-panel reveal" style="animation-delay: 100ms">
+    <div class="panel-heading">
+      <div>
+        <span class="panel-heading__eyebrow">Inventory mix</span>
+        <h2>Category Split</h2>
+      </div>
+    </div>
+
+    <div class="chart-box chart-box--doughnut">
+      <canvas
+        baseChart
+        [type]="'doughnut'"
+        [data]="categoryChartData()"
+        [options]="categoryChartOptions"
+      ></canvas>
+    </div>
+  </article>
+</section>
+
+<section class="dashboard-grid dashboard-grid--operations">
+  <article class="dashboard-panel glass-panel reveal">
+    <div class="panel-heading">
+      <div>
+        <span class="panel-heading__eyebrow">Exception center</span>
+        <h2>Recent Alerts</h2>
+      </div>
+      <button mat-button type="button">
+        View all
+        <mat-icon fontSet="material-icons-round">arrow_forward</mat-icon>
+      </button>
+    </div>
+
+    <div class="alerts-list">
+      @for (alert of recentAlerts(); track alert.title) {
+        <div class="alert-item" [ngClass]="severityClass(alert.severity)">
+          <div class="alert-item__icon">
+            <mat-icon fontSet="material-icons-round">{{ alert.icon }}</mat-icon>
+          </div>
+          <div>
+            <strong>{{ alert.title }}</strong>
+            <p>{{ alert.description }}</p>
+          </div>
+          <time>{{ alert.time }}</time>
+        </div>
+      }
+    </div>
+  </article>
+
+  <article class="dashboard-panel glass-panel reveal" style="animation-delay: 120ms">
+    <div class="panel-heading">
+      <div>
+        <span class="panel-heading__eyebrow">Replenishment queue</span>
+        <h2>Low Stock Table</h2>
+      </div>
+      <button mat-button type="button">
+        Create PO
+        <mat-icon fontSet="material-icons-round">add_shopping_cart</mat-icon>
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table mat-table [dataSource]="lowStockItems()">
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>Product</th>
+          <td mat-cell *matCellDef="let item">
+            <strong class="product-name">{{ item.product }}</strong>
+            <span class="sku">{{ item.sku }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="warehouse">
+          <th mat-header-cell *matHeaderCellDef>Warehouse</th>
+          <td mat-cell *matCellDef="let item">{{ item.warehouse }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="available">
+          <th mat-header-cell *matHeaderCellDef>Available</th>
+          <td mat-cell *matCellDef="let item">
+            <div class="stock-meter">
+              <span>{{ item.available }}</span>
+              <mat-progress-bar mode="determinate" [value]="stockRatio(item)"></mat-progress-bar>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="reorderPoint">
+          <th mat-header-cell *matHeaderCellDef>Reorder Point</th>
+          <td mat-cell *matCellDef="let item">{{ item.reorderPoint }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="status-pill" [ngClass]="statusClass(item.status)">{{ item.status }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="action">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let item">
+            <button mat-icon-button type="button" [attr.aria-label]="'Open ' + item.product">
+              <mat-icon fontSet="material-icons-round">open_in_new</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="lowStockColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: lowStockColumns;"></tr>
+      </table>
+    </div>
+  </article>
+</section>

@@ -1,0 +1,41 @@
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { Alert } from '../models/inventory.models';
+import { ApiService } from './api.service';
+
+@Injectable({ providedIn: 'root' })
+export class AlertService {
+  private readonly api = inject(ApiService);
+
+  getForRecipient(recipientId: string | number): Observable<Alert[]> {
+    return this.api.get<Alert[]>(`/alerts/recipient/${recipientId}`, undefined, { silentErrors: true });
+  }
+
+  getUnacknowledged(recipientId: string | number): Observable<Alert[]> {
+    return this.api.get<Alert[]>(`/alerts/unacknowledged/${recipientId}`, undefined, { silentErrors: true });
+  }
+
+  getUnreadCount(recipientId: string | number): Observable<{ recipientId: number; unreadCount: number }> {
+    return this.api.get<{ recipientId: number; unreadCount: number }>(`/alerts/unread-count/${recipientId}`, undefined, { silentErrors: true });
+  }
+
+  send(alert: Partial<Alert>): Observable<Alert> {
+    return this.api.post<Alert>('/alerts', alert);
+  }
+
+  markAsRead(id: number): Observable<Alert> {
+    return this.api.put<Alert>(`/alerts/${id}/read`, {});
+  }
+
+  markAllRead(recipientId: string | number): Observable<Record<string, string>> {
+    return this.api.put<Record<string, string>>(`/alerts/read-all/${recipientId}`, {});
+  }
+
+  acknowledge(id: number): Observable<Alert> {
+    return this.api.put<Alert>(`/alerts/${id}/acknowledge`, {});
+  }
+
+  delete(id: number): Observable<Record<string, string>> {
+    return this.api.delete<Record<string, string>>(`/alerts/${id}`);
+  }
+}
