@@ -44,6 +44,10 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${environment.apiBaseUrl}/auth/register`, backendPayload);
   }
 
+  resetPassword(email: string, newPassword: string): Observable<Record<string, string>> {
+    return this.http.post<Record<string, string>>(`${environment.apiBaseUrl}/auth/forgot-password`, { email, newPassword });
+  }
+
   getUsers(): Observable<UserProfile[]> {
     return this.http.get<UserProfile[]>(`${environment.apiBaseUrl}/auth/users`);
   }

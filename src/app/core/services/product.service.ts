@@ -31,6 +31,10 @@ export class ProductService {
     return this.api.put<Record<string, string>>(`/products/deactivate/${id}`, {});
   }
 
+  activate(id: number): Observable<Record<string, string>> {
+    return this.api.put<Record<string, string>>(`/products/activate/${id}`, {});
+  }
+
   delete(id: number): Observable<Record<string, string>> {
     return this.api.delete<Record<string, string>>(`/products/${id}`);
   }

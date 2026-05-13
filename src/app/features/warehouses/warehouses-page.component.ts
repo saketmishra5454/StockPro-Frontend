@@ -52,10 +52,13 @@ import { PageHeaderComponent } from '@shared/ui/page-header/page-header.componen
               <td>#{{ warehouse.managerId }}</td>
               <td>{{ warehouse.capacity }}</td>
               <td>{{ capacityPercent(warehouse) }}%</td>
-              <td><span class="status-pill" [class.status-pill--good]="warehouse.isActive ?? warehouse.active ?? true">{{ (warehouse.isActive ?? warehouse.active ?? true) ? 'Active' : 'Inactive' }}</span></td>
+              <td><span class="status-pill" [class.status-pill--good]="isActive(warehouse)" [class.status-pill--danger]="!isActive(warehouse)">{{ isActive(warehouse) ? 'Active' : 'Inactive' }}</span></td>
               <td class="action-row">
                 <button mat-icon-button type="button" aria-label="Edit warehouse" (click)="edit(warehouse)"><mat-icon fontSet="material-icons-round">edit</mat-icon></button>
-                <button mat-icon-button type="button" aria-label="Deactivate warehouse" (click)="deactivate(warehouse)" [disabled]="!(warehouse.isActive ?? warehouse.active ?? true)"><mat-icon fontSet="material-icons-round">block</mat-icon></button>
+                <button *ngIf="isActive(warehouse); else restoreWarehouseAction" mat-icon-button type="button" aria-label="Deactivate warehouse" (click)="deactivate(warehouse)"><mat-icon fontSet="material-icons-round">block</mat-icon></button>
+                <ng-template #restoreWarehouseAction>
+                  <button mat-icon-button color="primary" type="button" aria-label="Activate warehouse" (click)="activate(warehouse)"><mat-icon fontSet="material-icons-round">lock_open</mat-icon></button>
+                </ng-template>
               </td>
             </tr>
             <tr *ngIf="loading()"><td colspan="7" class="muted">Loading warehouses...</td></tr>
@@ -120,9 +123,20 @@ export class WarehousesPageComponent {
     this.draft = { ...warehouse };
   }
 
+  isActive(warehouse: Warehouse): boolean {
+    return warehouse.isActive ?? warehouse.active ?? true;
+  }
+
   deactivate(warehouse: Warehouse): void {
     this.warehousesService.deactivate(warehouse.warehouseId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.notifications.success('Warehouse deactivated.');
+      this.load();
+    });
+  }
+
+  activate(warehouse: Warehouse): void {
+    this.warehousesService.activate(warehouse.warehouseId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.notifications.success('Warehouse activated.');
       this.load();
     });
   }

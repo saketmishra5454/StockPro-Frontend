@@ -31,6 +31,10 @@ export class WarehouseService {
     return this.api.put<Record<string, string>>(`/warehouses/deactivate/${id}`, {});
   }
 
+  activate(id: number): Observable<Record<string, string>> {
+    return this.api.put<Record<string, string>>(`/warehouses/activate/${id}`, {});
+  }
+
   initializeStock(warehouseId: number, productId: number, initialQuantity: number): Observable<StockLevel> {
     return this.api.post<StockLevel>(
       `/stock/initialize?warehouseId=${warehouseId}&productId=${productId}&initialQuantity=${initialQuantity}`,

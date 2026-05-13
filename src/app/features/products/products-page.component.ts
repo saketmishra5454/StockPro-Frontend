@@ -73,11 +73,14 @@ import { PageHeaderComponent } from '@shared/ui/page-header/page-header.componen
               <td>{{ product.costPrice | currency:'INR':'symbol':'1.0-0' }}</td>
               <td>{{ product.sellingPrice | currency:'INR':'symbol':'1.0-0' }}</td>
               <td>{{ product.reorderLevel }} / {{ product.maxStockLevel }}</td>
-              <td><span class="status-pill" [class.status-pill--good]="product.isActive ?? product.active ?? true">{{ (product.isActive ?? product.active ?? true) ? 'Active' : 'Inactive' }}</span></td>
+              <td><span class="status-pill" [class.status-pill--good]="isActive(product)" [class.status-pill--danger]="!isActive(product)">{{ isActive(product) ? 'Active' : 'Inactive' }}</span></td>
               <td>
                 <div class="action-row">
                   <button mat-icon-button type="button" aria-label="Edit product" (click)="edit(product)"><mat-icon fontSet="material-icons-round">edit</mat-icon></button>
-                  <button mat-icon-button type="button" aria-label="Deactivate product" (click)="deactivate(product)" [disabled]="!(product.isActive ?? product.active ?? true)"><mat-icon fontSet="material-icons-round">block</mat-icon></button>
+                  <button *ngIf="isActive(product); else restoreProductAction" mat-icon-button type="button" aria-label="Deactivate product" (click)="deactivate(product)"><mat-icon fontSet="material-icons-round">block</mat-icon></button>
+                  <ng-template #restoreProductAction>
+                    <button mat-icon-button color="primary" type="button" aria-label="Activate product" (click)="activate(product)"><mat-icon fontSet="material-icons-round">lock_open</mat-icon></button>
+                  </ng-template>
                 </div>
               </td>
             </tr>
@@ -149,9 +152,20 @@ export class ProductsPageComponent {
     this.draft = { ...product };
   }
 
+  isActive(product: Product): boolean {
+    return product.isActive ?? product.active ?? true;
+  }
+
   deactivate(product: Product): void {
     this.productService.deactivate(product.productId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.notifications.success('Product deactivated.');
+      this.load();
+    });
+  }
+
+  activate(product: Product): void {
+    this.productService.activate(product.productId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.notifications.success('Product activated.');
       this.load();
     });
   }

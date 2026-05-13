@@ -37,12 +37,19 @@ export class LoginPageComponent {
   private readonly notifications = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
   readonly loading = signal(false);
+  readonly resetting = signal(false);
+  readonly showReset = signal(false);
   readonly hidePassword = signal(true);
 
   readonly form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     rememberDevice: [true]
+  });
+
+  readonly resetForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    newPassword: ['', [Validators.required, Validators.minLength(8)]]
   });
 
   constructor() {
@@ -81,8 +88,62 @@ export class LoginPageComponent {
     return '';
   }
 
+  get resetEmailError(): string {
+    const control = this.resetForm.controls.email;
+
+    if (control.hasError('required')) {
+      return 'Account email is required';
+    }
+
+    if (control.hasError('email')) {
+      return 'Enter a valid business email';
+    }
+
+    return '';
+  }
+
+  get resetPasswordError(): string {
+    const control = this.resetForm.controls.newPassword;
+
+    if (control.hasError('required')) {
+      return 'New password is required';
+    }
+
+    if (control.hasError('minlength')) {
+      return 'Use at least 8 characters';
+    }
+
+    return '';
+  }
+
   togglePasswordVisibility(): void {
     this.hidePassword.update((value) => !value);
+  }
+
+  toggleReset(): void {
+    this.showReset.update((value) => !value);
+    this.resetForm.patchValue({ email: this.form.controls.email.value });
+  }
+
+  resetPassword(): void {
+    if (this.resetForm.invalid) {
+      this.resetForm.markAllAsTouched();
+      this.notifications.error('Please enter a valid email and new password.');
+      return;
+    }
+
+    this.resetting.set(true);
+    const { email, newPassword } = this.resetForm.getRawValue();
+
+    this.auth.resetPassword(email, newPassword).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.notifications.success('Password reset. You can sign in now.');
+        this.form.patchValue({ email, password: newPassword });
+        this.showReset.set(false);
+        this.resetting.set(false);
+      },
+      error: () => this.resetting.set(false)
+    });
   }
 
   submit(): void {
