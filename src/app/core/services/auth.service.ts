@@ -56,6 +56,10 @@ export class AuthService {
     return this.http.put<Record<string, string>>(`${environment.apiBaseUrl}/auth/deactivate/${id}`, {});
   }
 
+  activateUser(id: number): Observable<Record<string, string>> {
+    return this.http.put<Record<string, string>>(`${environment.apiBaseUrl}/auth/activate/${id}`, {});
+  }
+
   hasAnyRole(roles: UserRole[]): boolean {
     const role = this.currentUser?.role;
     return Boolean(role && roles.includes(role));

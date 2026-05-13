@@ -25,31 +25,42 @@
 
   <section class="workspace">
     <header class="topbar glass-panel">
-      <button mat-icon-button type="button" aria-label="Toggle sidebar" (click)="toggleSidebar()">
-        <mat-icon fontSet="material-icons-round">menu_open</mat-icon>
-      </button>
+      <div class="topbar__left">
+        <button mat-icon-button type="button" aria-label="Toggle sidebar" (click)="toggleSidebar()">
+          <mat-icon fontSet="material-icons-round">menu_open</mat-icon>
+        </button>
 
-      <div class="search">
-        <mat-icon fontSet="material-icons-round">search</mat-icon>
-        <input type="search" placeholder="Search inventory, suppliers, orders" aria-label="Search StockPro">
+        <div class="search">
+          <mat-icon fontSet="material-icons-round">search</mat-icon>
+          <input type="search" placeholder="Search inventory, suppliers, orders" aria-label="Search StockPro">
+        </div>
       </div>
 
       <div class="topbar__actions">
-        <button mat-icon-button type="button" aria-label="Toggle theme" (click)="theme.toggle()">
+        <button class="topbar__icon-button" mat-icon-button type="button" aria-label="Toggle theme" (click)="theme.toggle()">
           <mat-icon fontSet="material-icons-round">{{ theme.mode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
         </button>
 
-        <button mat-icon-button type="button" aria-label="Notifications">
+        <button class="topbar__icon-button notification-button" mat-icon-button type="button" aria-label="Notifications">
           <mat-icon fontSet="material-icons-round">notifications</mat-icon>
+          <span aria-hidden="true"></span>
         </button>
 
         <ng-container *ngIf="user$ | async as user">
           <button mat-button type="button" [matMenuTriggerFor]="profileMenu" class="profile-button">
-            <span>{{ user.name }}</span>
+            <span class="profile-button__avatar">{{ user.name.charAt(0) | uppercase }}</span>
+            <span class="profile-button__copy">
+              <strong>{{ user.name }}</strong>
+              <small>{{ user.id }}</small>
+            </span>
             <mat-icon fontSet="material-icons-round">expand_more</mat-icon>
           </button>
 
-          <mat-menu #profileMenu="matMenu">
+          <mat-menu #profileMenu="matMenu" panelClass="profile-menu">
+            <button mat-menu-item disabled>
+              <mat-icon fontSet="material-icons-round">alternate_email</mat-icon>
+              <span>{{ user.email }}</span>
+            </button>
             <button mat-menu-item disabled>
               <mat-icon fontSet="material-icons-round">badge</mat-icon>
               <span>{{ user.role }}</span>

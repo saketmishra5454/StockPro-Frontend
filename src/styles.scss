@@ -72,6 +72,58 @@ body {
   --mdc-snackbar-container-shape: 12px;
 }
 
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-form-field .mdc-notched-outline__leading,
+.mat-mdc-form-field .mdc-notched-outline__notch,
+.mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: var(--app-border) !important;
+}
+
+.mat-mdc-form-field:not(.mat-form-field-invalid):hover .mdc-notched-outline__leading,
+.mat-mdc-form-field:not(.mat-form-field-invalid):hover .mdc-notched-outline__notch,
+.mat-mdc-form-field:not(.mat-form-field-invalid):hover .mdc-notched-outline__trailing {
+  border-color: rgba(37, 120, 232, 0.45) !important;
+}
+
+.mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  background: rgba(255, 255, 255, 0.48);
+  border-radius: 0.9rem;
+}
+
+.dark .mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  background: rgba(15, 23, 42, 0.36);
+}
+
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: var(--app-panel);
+  --mdc-dialog-container-shape: 1rem;
+  backdrop-filter: blur(22px);
+}
+
+.profile-menu.mat-mdc-menu-panel {
+  min-width: 15rem;
+  border: 1px solid var(--app-border);
+  border-radius: 1rem;
+  background: var(--app-panel);
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(22px);
+  animation: menu-enter 150ms ease-out both;
+}
+
+@keyframes menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .module-grid {
   display: grid;
   gap: 1rem;

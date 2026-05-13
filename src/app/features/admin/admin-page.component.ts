@@ -3,17 +3,19 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { catchError, finalize, of } from 'rxjs';
+import { catchError, filter, finalize, of, switchMap } from 'rxjs';
 import { UserProfile } from '@core/models/inventory.models';
 import { AuthService } from '@core/services/auth.service';
 import { NotificationService } from '@core/services/notification.service';
+import { ConfirmDialogComponent } from '@shared/ui/confirm-dialog/confirm-dialog.component';
 import { PageHeaderComponent } from '@shared/ui/page-header/page-header.component';
 
 @Component({
   selector: 'app-admin-page',
   standalone: true,
-  imports: [FormsModule, MatButtonModule, MatIconModule, NgFor, NgIf, PageHeaderComponent],
+  imports: [FormsModule, MatButtonModule, MatDialogModule, MatIconModule, NgFor, NgIf, PageHeaderComponent],
   template: `
     <app-page-header title="Admin Panel" description="View users, roles, departments, and account status from the auth service.">
       <button mat-flat-button color="primary" type="button" (click)="load()">
@@ -42,8 +44,27 @@ import { PageHeaderComponent } from '@shared/ui/page-header/page-header.componen
               <td><span class="status-pill">{{ user.role }}</span></td>
               <td>{{ user.department || 'Unassigned' }}</td>
               <td>{{ user.phone || '-' }}</td>
-              <td><span class="status-pill" [class.status-pill--good]="user.isActive ?? user.active ?? true">{{ (user.isActive ?? user.active ?? true) ? 'Active' : 'Inactive' }}</span></td>
-              <td><button mat-icon-button type="button" aria-label="Deactivate user" (click)="deactivate(user)" [disabled]="!(user.isActive ?? user.active ?? true)"><mat-icon fontSet="material-icons-round">block</mat-icon></button></td>
+              <td>
+                <span class="status-pill" [class.status-pill--good]="isActive(user)" [class.status-pill--danger]="!isActive(user)">
+                  {{ isActive(user) ? 'Active' : 'Blocked' }}
+                </span>
+              </td>
+              <td class="action-row">
+                <button
+                  *ngIf="isActive(user); else restoreUserAction"
+                  mat-icon-button
+                  type="button"
+                  aria-label="Block user"
+                  (click)="toggleAccess(user, false)"
+                >
+                  <mat-icon fontSet="material-icons-round">block</mat-icon>
+                </button>
+                <ng-template #restoreUserAction>
+                  <button mat-icon-button color="primary" type="button" aria-label="Unblock user" (click)="toggleAccess(user, true)">
+                    <mat-icon fontSet="material-icons-round">lock_open</mat-icon>
+                  </button>
+                </ng-template>
+              </td>
             </tr>
             <tr *ngIf="loading()"><td colspan="6" class="muted">Loading users...</td></tr>
             <tr *ngIf="!loading() && !filteredUsers().length"><td colspan="6" class="muted">No users found.</td></tr>
@@ -58,6 +79,7 @@ export class AdminPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(AuthService);
   private readonly notifications = inject(NotificationService);
+  private readonly dialog = inject(MatDialog);
 
   readonly users = signal<UserProfile[]>([]);
   readonly loading = signal(true);
@@ -66,7 +88,7 @@ export class AdminPageComponent {
     const term = this.query().trim().toLowerCase();
     return this.users().filter((user) => !term || [user.fullName, user.name, user.email, user.role, user.department].some((value) => value?.toLowerCase().includes(term)));
   });
-  readonly activeUsers = computed(() => this.users().filter((user) => user.isActive ?? user.active ?? true).length);
+  readonly activeUsers = computed(() => this.users().filter((user) => this.isActive(user)).length);
   readonly adminUsers = computed(() => this.users().filter((user) => user.role === 'ADMIN').length);
 
   constructor() {
@@ -78,15 +100,35 @@ export class AdminPageComponent {
     this.auth.getUsers().pipe(catchError(() => of<UserProfile[]>([])), finalize(() => this.loading.set(false)), takeUntilDestroyed(this.destroyRef)).subscribe((users) => this.users.set(users));
   }
 
-  deactivate(user: UserProfile): void {
+  isActive(user: UserProfile): boolean {
+    return user.isActive ?? user.active ?? true;
+  }
+
+  toggleAccess(user: UserProfile, restore: boolean): void {
     const id = Number(user.userId ?? user.id);
     if (!id) {
       this.notifications.info('User id is missing.');
       return;
     }
 
-    this.auth.deactivateUser(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.notifications.success('User deactivated.');
+    const displayName = user.fullName || user.name || user.email;
+    const action = restore ? 'unblock' : 'block';
+
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: `${restore ? 'Unblock' : 'Block'} user`,
+        message: `Are you sure you want to ${action} ${displayName}? ${restore ? 'They will be able to sign in again.' : 'They will lose access immediately.'}`,
+        confirmLabel: restore ? 'Unblock user' : 'Block user',
+        icon: restore ? 'lock_open' : 'block',
+        tone: restore ? 'primary' : 'danger'
+      }
+    }).afterClosed().pipe(
+      filter(Boolean),
+      switchMap(() => restore ? this.auth.activateUser(id) : this.auth.deactivateUser(id)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.users.update((users) => users.map((item) => Number(item.userId ?? item.id) === id ? { ...item, isActive: restore, active: restore } : item));
+      this.notifications.success(restore ? 'User unblocked.' : 'User blocked.');
       this.load();
     });
   }

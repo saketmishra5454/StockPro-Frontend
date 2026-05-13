@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, NgFor, NgIf, UpperCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +15,7 @@ import { NAVIGATION_ITEMS } from '../navigation.model';
     AsyncPipe,
     NgFor,
     NgIf,
+    UpperCasePipe,
     RouterLink,
     RouterLinkActive,
     RouterOutlet,

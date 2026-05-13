@@ -35,6 +35,10 @@ export class SupplierService {
     return this.api.put<Record<string, string>>(`/suppliers/${id}/deactivate`, {});
   }
 
+  activate(id: number): Observable<Record<string, string>> {
+    return this.api.put<Record<string, string>>(`/suppliers/${id}/activate`, {});
+  }
+
   delete(id: number): Observable<void> {
     return this.api.delete<void>(`/suppliers/${id}`);
   }

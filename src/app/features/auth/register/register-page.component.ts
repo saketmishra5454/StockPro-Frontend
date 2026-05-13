@@ -1,4 +1,4 @@
-import { NgFor } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -6,7 +6,9 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize, switchMap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { UserRole } from '@core/models/auth.models';
 import { AuthService } from '@core/services/auth.service';
@@ -15,7 +17,7 @@ import { NotificationService } from '@core/services/notification.service';
 @Component({
   selector: 'app-register-page',
   standalone: true,
-  imports: [NgFor, ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [NgFor, NgIf, ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule],
   templateUrl: './register-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -27,6 +29,7 @@ export class RegisterPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   readonly roles: UserRole[] = ['ADMIN', 'MANAGER', 'STAFF', 'OFFICER'];
   readonly loading = signal(false);
+  readonly hidePassword = signal(true);
 
   readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -35,9 +38,56 @@ export class RegisterPageComponent {
     role: this.fb.control<UserRole>('STAFF', [Validators.required])
   });
 
+  get nameError(): string {
+    const control = this.form.controls.name;
+
+    if (control.hasError('required')) {
+      return 'Full name is required';
+    }
+
+    if (control.hasError('minlength')) {
+      return 'Name must be at least 2 characters';
+    }
+
+    return '';
+  }
+
+  get emailError(): string {
+    const control = this.form.controls.email;
+
+    if (control.hasError('required')) {
+      return 'Work email is required';
+    }
+
+    if (control.hasError('email')) {
+      return 'Enter a valid business email';
+    }
+
+    return '';
+  }
+
+  get passwordError(): string {
+    const control = this.form.controls.password;
+
+    if (control.hasError('required')) {
+      return 'Password is required';
+    }
+
+    if (control.hasError('minlength')) {
+      return 'Use at least 8 characters';
+    }
+
+    return '';
+  }
+
+  togglePasswordVisibility(): void {
+    this.hidePassword.update((value) => !value);
+  }
+
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.notifications.error('Please fix the highlighted fields.');
       return;
     }
 

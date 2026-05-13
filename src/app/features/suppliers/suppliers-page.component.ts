@@ -3,17 +3,19 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { catchError, finalize, of } from 'rxjs';
+import { catchError, filter, finalize, of, switchMap } from 'rxjs';
 import { Supplier } from '@core/models/inventory.models';
 import { NotificationService } from '@core/services/notification.service';
 import { SupplierService } from '@core/services/supplier.service';
+import { ConfirmDialogComponent } from '@shared/ui/confirm-dialog/confirm-dialog.component';
 import { PageHeaderComponent } from '@shared/ui/page-header/page-header.component';
 
 @Component({
   selector: 'app-suppliers-page',
   standalone: true,
-  imports: [FormsModule, MatButtonModule, MatIconModule, NgFor, NgIf, PageHeaderComponent],
+  imports: [FormsModule, MatButtonModule, MatDialogModule, MatIconModule, NgFor, NgIf, PageHeaderComponent],
   template: `
     <app-page-header title="Suppliers" description="Maintain supplier profiles, contact channels, locations, and performance ratings.">
       <button mat-flat-button color="primary" type="button" (click)="saveSupplier()" [disabled]="saving()">
@@ -51,11 +53,28 @@ import { PageHeaderComponent } from '@shared/ui/page-header/page-header.componen
               <td>{{ supplier.contactPerson || 'Unassigned' }}<div class="muted text-sm">{{ supplier.phone || '' }}</div></td>
               <td>{{ supplier.city || 'Unknown' }}, {{ supplier.country || 'Unknown' }}</td>
               <td>{{ supplier.rating || 0 }}/5</td>
-              <td><span class="status-pill" [class.status-pill--good]="supplier.isActive ?? supplier.active ?? true">{{ (supplier.isActive ?? supplier.active ?? true) ? 'Active' : 'Inactive' }}</span></td>
+              <td>
+                <span class="status-pill" [class.status-pill--good]="isActive(supplier)" [class.status-pill--danger]="!isActive(supplier)">
+                  {{ isActive(supplier) ? 'Active' : 'Blocked' }}
+                </span>
+              </td>
               <td class="action-row">
                 <button mat-icon-button type="button" aria-label="Edit supplier" (click)="edit(supplier)"><mat-icon fontSet="material-icons-round">edit</mat-icon></button>
                 <button mat-icon-button type="button" aria-label="Rate supplier" (click)="rate(supplier)"><mat-icon fontSet="material-icons-round">star</mat-icon></button>
-                <button mat-icon-button type="button" aria-label="Deactivate supplier" (click)="deactivate(supplier)" [disabled]="!(supplier.isActive ?? supplier.active ?? true)"><mat-icon fontSet="material-icons-round">block</mat-icon></button>
+                <button
+                  *ngIf="isActive(supplier); else restoreSupplierAction"
+                  mat-icon-button
+                  type="button"
+                  aria-label="Block supplier"
+                  (click)="toggleAccess(supplier, false)"
+                >
+                  <mat-icon fontSet="material-icons-round">block</mat-icon>
+                </button>
+                <ng-template #restoreSupplierAction>
+                  <button mat-icon-button color="primary" type="button" aria-label="Unblock supplier" (click)="toggleAccess(supplier, true)">
+                    <mat-icon fontSet="material-icons-round">lock_open</mat-icon>
+                  </button>
+                </ng-template>
               </td>
             </tr>
             <tr *ngIf="loading()"><td colspan="6" class="muted">Loading suppliers...</td></tr>
@@ -71,6 +90,7 @@ export class SuppliersPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly supplierService = inject(SupplierService);
   private readonly notifications = inject(NotificationService);
+  private readonly dialog = inject(MatDialog);
 
   readonly suppliers = signal<Supplier[]>([]);
   readonly loading = signal(true);
@@ -83,7 +103,7 @@ export class SuppliersPageComponent {
     const term = this.query().trim().toLowerCase();
     return this.suppliers().filter((supplier) => !term || [supplier.name, supplier.city, supplier.country, supplier.email].some((value) => value?.toLowerCase().includes(term)));
   });
-  readonly activeCount = computed(() => this.suppliers().filter((supplier) => supplier.isActive ?? supplier.active ?? true).length);
+  readonly activeCount = computed(() => this.suppliers().filter((supplier) => this.isActive(supplier)).length);
   readonly averageRating = computed(() => {
     const rated = this.suppliers().filter((supplier) => supplier.rating);
     return rated.length ? (rated.reduce((sum, supplier) => sum + (supplier.rating ?? 0), 0) / rated.length).toFixed(1) : '0.0';
@@ -127,9 +147,28 @@ export class SuppliersPageComponent {
     });
   }
 
-  deactivate(supplier: Supplier): void {
-    this.supplierService.deactivate(supplier.supplierId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.notifications.success('Supplier deactivated.');
+  isActive(supplier: Supplier): boolean {
+    return supplier.isActive ?? supplier.active ?? true;
+  }
+
+  toggleAccess(supplier: Supplier, restore: boolean): void {
+    const action = restore ? 'unblock' : 'block';
+
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: `${restore ? 'Unblock' : 'Block'} supplier`,
+        message: `Are you sure you want to ${action} ${supplier.name}? ${restore ? 'They can be selected for purchase operations again.' : 'They will be unavailable for new purchase orders.'}`,
+        confirmLabel: restore ? 'Unblock supplier' : 'Block supplier',
+        icon: restore ? 'lock_open' : 'block',
+        tone: restore ? 'primary' : 'danger'
+      }
+    }).afterClosed().pipe(
+      filter(Boolean),
+      switchMap(() => restore ? this.supplierService.activate(supplier.supplierId) : this.supplierService.deactivate(supplier.supplierId)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.suppliers.update((suppliers) => suppliers.map((item) => item.supplierId === supplier.supplierId ? { ...item, isActive: restore, active: restore } : item));
+      this.notifications.success(restore ? 'Supplier unblocked.' : 'Supplier blocked.');
       this.load();
     });
   }
