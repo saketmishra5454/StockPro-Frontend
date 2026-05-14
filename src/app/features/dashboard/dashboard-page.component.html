@@ -2,7 +2,7 @@
   title="Inventory Command Center"
   description="Monitor inventory value, purchase exposure, warehouse health, and operational exceptions from one executive dashboard."
 >
-  <button mat-flat-button color="primary" type="button" class="!h-11 !rounded-xl">
+  <button mat-flat-button color="primary" type="button" class="!h-11 !rounded-xl" (click)="exportReport()">
     <mat-icon fontSet="material-icons-round">download</mat-icon>
     Export report
   </button>
@@ -79,7 +79,7 @@
         <span class="panel-heading__eyebrow">Exception center</span>
         <h2>Recent Alerts</h2>
       </div>
-      <button mat-button type="button">
+      <button mat-button type="button" (click)="viewAllAlerts()">
         View all
         <mat-icon fontSet="material-icons-round">arrow_forward</mat-icon>
       </button>
@@ -107,7 +107,7 @@
         <span class="panel-heading__eyebrow">Replenishment queue</span>
         <h2>Low Stock Table</h2>
       </div>
-      <button mat-button type="button">
+      <button mat-button type="button" (click)="createPurchaseOrder()">
         Create PO
         <mat-icon fontSet="material-icons-round">add_shopping_cart</mat-icon>
       </button>
@@ -153,7 +153,7 @@
         <ng-container matColumnDef="action">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let item">
-            <button mat-icon-button type="button" [attr.aria-label]="'Open ' + item.product">
+            <button mat-icon-button type="button" [attr.aria-label]="'Open ' + item.product" (click)="openLowStockItem(item)">
               <mat-icon fontSet="material-icons-round">open_in_new</mat-icon>
             </button>
           </td>

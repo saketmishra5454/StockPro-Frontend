@@ -2,6 +2,7 @@ import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,6 +43,10 @@ import { PageHeaderComponent } from '@shared/ui/page-header/page-header.componen
         <label class="form-field"><input name="phone" [(ngModel)]="draft.phone" placeholder="Phone"></label>
         <label class="form-field"><input name="city" [(ngModel)]="draft.city" placeholder="City"></label>
         <label class="form-field"><input name="country" [(ngModel)]="draft.country" placeholder="Country"></label>
+        <label class="form-field"><input name="taxId" [(ngModel)]="draft.taxId" placeholder="Tax / GST ID"></label>
+        <label class="form-field"><input name="paymentTerms" [(ngModel)]="draft.paymentTerms" placeholder="Payment terms"></label>
+        <label class="form-field"><input name="leadTimeDays" [(ngModel)]="draft.leadTimeDays" type="number" min="0" placeholder="Lead time days"></label>
+        <label class="form-field"><input name="address" [(ngModel)]="draft.address" placeholder="Address"></label>
       </form>
 
       <div class="table-wrap">
@@ -91,6 +96,7 @@ export class SuppliersPageComponent {
   private readonly supplierService = inject(SupplierService);
   private readonly notifications = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
+  private readonly route = inject(ActivatedRoute);
 
   readonly suppliers = signal<Supplier[]>([]);
   readonly loading = signal(true);
@@ -101,7 +107,7 @@ export class SuppliersPageComponent {
 
   readonly filteredSuppliers = computed(() => {
     const term = this.query().trim().toLowerCase();
-    return this.suppliers().filter((supplier) => !term || [supplier.name, supplier.city, supplier.country, supplier.email].some((value) => value?.toLowerCase().includes(term)));
+    return this.suppliers().filter((supplier) => !term || [supplier.name, supplier.city, supplier.country, supplier.email, supplier.taxId, supplier.paymentTerms].some((value) => value?.toLowerCase().includes(term)));
   });
   readonly activeCount = computed(() => this.suppliers().filter((supplier) => this.isActive(supplier)).length);
   readonly averageRating = computed(() => {
@@ -110,6 +116,9 @@ export class SuppliersPageComponent {
   });
 
   constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      this.query.set(params.get('q') ?? '');
+    });
     this.load();
   }
 
@@ -174,6 +183,6 @@ export class SuppliersPageComponent {
   }
 
   private emptyDraft(): Partial<Supplier> {
-    return { name: '', contactPerson: '', email: '', phone: '', city: '', country: '', rating: 4 };
+    return { name: '', contactPerson: '', email: '', phone: '', city: '', country: '', address: '', taxId: '', paymentTerms: 'NET-30', leadTimeDays: 0, rating: 4 };
   }
 }

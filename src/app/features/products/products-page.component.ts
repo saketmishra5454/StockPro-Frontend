@@ -2,9 +2,10 @@ import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { catchError, finalize, of } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { Product } from '@core/models/inventory.models';
 import { ProductService } from '@core/services/product.service';
 import { NotificationService } from '@core/services/notification.service';
@@ -45,7 +46,7 @@ import { PageHeaderComponent } from '@shared/ui/page-header/page-header.componen
         <h2>Catalog</h2>
         <label class="search-field">
           <mat-icon fontSet="material-icons-round">search</mat-icon>
-          <input name="productSearch" [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Search by name, SKU, category">
+          <input name="productSearch" [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Search by name, SKU, barcode, category">
         </label>
       </div>
 
@@ -54,22 +55,28 @@ import { PageHeaderComponent } from '@shared/ui/page-header/page-header.componen
         <label class="form-field"><input name="name" [(ngModel)]="draft.name" placeholder="Product name" required></label>
         <label class="form-field"><input name="category" [(ngModel)]="draft.category" placeholder="Category"></label>
         <label class="form-field"><input name="brand" [(ngModel)]="draft.brand" placeholder="Brand"></label>
+        <label class="form-field"><input name="barcode" [(ngModel)]="draft.barcode" placeholder="Barcode / QR value"></label>
+        <label class="form-field"><input name="unitOfMeasure" [(ngModel)]="draft.unitOfMeasure" placeholder="Unit of measure"></label>
         <label class="form-field"><input name="costPrice" [(ngModel)]="draft.costPrice" type="number" min="0" placeholder="Cost price"></label>
         <label class="form-field"><input name="sellingPrice" [(ngModel)]="draft.sellingPrice" type="number" min="0" placeholder="Selling price"></label>
         <label class="form-field"><input name="reorderLevel" [(ngModel)]="draft.reorderLevel" type="number" min="0" placeholder="Reorder level"></label>
         <label class="form-field"><input name="maxStockLevel" [(ngModel)]="draft.maxStockLevel" type="number" min="0" placeholder="Max stock"></label>
+        <label class="form-field"><input name="leadTimeDays" [(ngModel)]="draft.leadTimeDays" type="number" min="0" placeholder="Lead time days"></label>
+        <label class="form-field"><input name="imageUrl" [(ngModel)]="draft.imageUrl" placeholder="Image URL"></label>
+        <label class="form-field"><input name="description" [(ngModel)]="draft.description" placeholder="Description"></label>
       </form>
 
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>SKU</th><th>Product</th><th>Category</th><th>Cost</th><th>Selling</th><th>Policy</th><th>Status</th><th></th></tr>
+            <tr><th>SKU</th><th>Product</th><th>Category</th><th>Barcode</th><th>Cost</th><th>Selling</th><th>Policy</th><th>Status</th><th></th></tr>
           </thead>
           <tbody>
             <tr *ngFor="let product of filteredProducts()">
               <td>{{ product.sku }}</td>
               <td><strong>{{ product.name }}</strong><div class="muted text-sm">{{ product.brand || 'No brand' }}</div></td>
               <td>{{ product.category || 'General' }}</td>
+              <td>{{ product.barcode || '-' }}</td>
               <td>{{ product.costPrice | currency:'INR':'symbol':'1.0-0' }}</td>
               <td>{{ product.sellingPrice | currency:'INR':'symbol':'1.0-0' }}</td>
               <td>{{ product.reorderLevel }} / {{ product.maxStockLevel }}</td>
@@ -84,8 +91,8 @@ import { PageHeaderComponent } from '@shared/ui/page-header/page-header.componen
                 </div>
               </td>
             </tr>
-            <tr *ngIf="!loading() && !filteredProducts().length"><td colspan="8" class="muted">No products found.</td></tr>
-            <tr *ngIf="loading()"><td colspan="8" class="muted">Loading products...</td></tr>
+            <tr *ngIf="!loading() && !filteredProducts().length"><td colspan="9" class="muted">No products found.</td></tr>
+            <tr *ngIf="loading()"><td colspan="9" class="muted">Loading products...</td></tr>
           </tbody>
         </table>
       </div>
@@ -97,8 +104,10 @@ export class ProductsPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly productService = inject(ProductService);
   private readonly notifications = inject(NotificationService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly products = signal<Product[]>([]);
+  readonly lowStockProducts = signal<Product[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly query = signal('');
@@ -108,27 +117,40 @@ export class ProductsPageComponent {
   readonly filteredProducts = computed(() => {
     const term = this.query().trim().toLowerCase();
     return this.products().filter((product) => !term ||
-      [product.name, product.sku, product.category, product.brand].some((value) => value?.toLowerCase().includes(term)));
+      [product.name, product.sku, product.category, product.brand, product.barcode, product.unitOfMeasure].some((value) => value?.toLowerCase().includes(term)));
   });
-  readonly lowStockCount = computed(() => this.products().filter((product) => product.reorderLevel > 0).length);
+  readonly lowStockCount = computed(() => this.lowStockProducts().length);
   readonly categoryCount = computed(() => new Set(this.products().map((product) => product.category).filter(Boolean)).size);
 
   constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      this.query.set(params.get('q') ?? '');
+    });
     this.load();
   }
 
   load(): void {
     this.loading.set(true);
-    this.productService.getAll().pipe(
-      catchError(() => of<Product[]>([])),
+    forkJoin({
+      products: this.productService.getAll().pipe(catchError(() => of<Product[]>([]))),
+      lowStockProducts: this.productService.getLowStock().pipe(catchError(() => of<Product[]>([])))
+    }).pipe(
       finalize(() => this.loading.set(false)),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe((products) => this.products.set(products));
+    ).subscribe(({ products, lowStockProducts }) => {
+      this.products.set(products);
+      this.lowStockProducts.set(lowStockProducts);
+    });
   }
 
   saveProduct(): void {
     if (!this.draft.sku || !this.draft.name) {
       this.notifications.info('Add SKU and product name first.');
+      return;
+    }
+
+    if (Number(this.draft.maxStockLevel || 0) > 0 && Number(this.draft.reorderLevel || 0) > Number(this.draft.maxStockLevel || 0)) {
+      this.notifications.info('Reorder level cannot exceed maximum stock.');
       return;
     }
 

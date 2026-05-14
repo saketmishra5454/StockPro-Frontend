@@ -224,6 +224,24 @@ body {
   font: inherit;
 }
 
+.form-field input[type='date'] {
+  color-scheme: light;
+}
+
+.form-field input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  cursor: pointer;
+  filter: invert(12%) sepia(18%) saturate(1110%) hue-rotate(181deg) brightness(91%) contrast(94%);
+}
+
+.dark .form-field input[type='date'] {
+  color-scheme: dark;
+}
+
+.dark .form-field input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(91%) sepia(12%) saturate(624%) hue-rotate(181deg) brightness(98%) contrast(93%);
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));

@@ -26,4 +26,12 @@ export class MovementService {
   getByType(type: string): Observable<StockMovement[]> {
     return this.api.get<StockMovement[]>(`/movements/type/${type}`);
   }
+
+  getByDateRange(from: string, to: string): Observable<StockMovement[]> {
+    return this.api.get<StockMovement[]>('/movements/date-range', { from, to });
+  }
+
+  getHistory(productId: number, warehouseId: number): Observable<StockMovement[]> {
+    return this.api.get<StockMovement[]>(`/movements/history/${productId}/${warehouseId}`);
+  }
 }

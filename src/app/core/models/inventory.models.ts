@@ -48,9 +48,14 @@ export interface Supplier {
   contactPerson?: string;
   email?: string;
   phone?: string;
+  address?: string;
   city?: string;
   country?: string;
+  taxId?: string;
+  paymentTerms?: string;
+  leadTimeDays?: number;
   rating?: number;
+  ratingCount?: number;
   active?: boolean;
   isActive?: boolean;
 }
@@ -95,6 +100,10 @@ export interface StockMovement {
   quantity: number;
   referenceId?: number;
   referenceType?: string;
+  unitCost?: number;
+  performedBy?: number;
+  notes?: string;
+  balanceAfter?: number;
   createdAt?: string;
   movementDate?: string;
 }
@@ -140,6 +149,10 @@ export interface ProductMovementSummary {
   productId: number;
   productName?: string;
   sku?: string;
+  totalUnitsIn?: number;
+  totalUnitsOut?: number;
+  totalUnitsMoved?: number;
+  totalValue?: number;
   totalMoved?: number;
   totalQuantity?: number;
   movementCount?: number;

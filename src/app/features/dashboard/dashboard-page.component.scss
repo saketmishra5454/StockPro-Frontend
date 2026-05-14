@@ -243,12 +243,13 @@
 
 .table-wrap {
   margin-top: 1rem;
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 table {
   width: 100%;
-  min-width: 48rem;
+  min-width: 0;
+  table-layout: fixed;
   background: transparent;
 }
 
@@ -275,7 +276,7 @@ table {
 .stock-meter {
   display: grid;
   gap: 0.45rem;
-  min-width: 8rem;
+  min-width: 5.5rem;
 }
 
 .stock-meter span {
@@ -291,6 +292,37 @@ table {
   padding: 0.35rem 0.65rem;
   font-size: 0.76rem;
   font-weight: 900;
+}
+
+.mat-column-product {
+  width: 28%;
+}
+
+.mat-column-warehouse {
+  width: 22%;
+}
+
+.mat-column-available {
+  width: 20%;
+}
+
+.mat-column-reorderPoint {
+  width: 14%;
+}
+
+.mat-column-status {
+  width: 12%;
+}
+
+.mat-column-action {
+  width: 3rem;
+  text-align: right;
+}
+
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+  overflow-wrap: anywhere;
+  padding-inline: 0.55rem;
 }
 
 .status--critical {

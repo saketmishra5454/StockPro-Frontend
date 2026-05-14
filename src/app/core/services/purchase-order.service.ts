@@ -24,15 +24,17 @@ export class PurchaseOrderService {
   create(purchaseOrder: Partial<PurchaseOrder>, lineItems: Partial<PurchaseOrderLineItem>[] = []): Observable<PurchaseOrder> {
     const createdById = Number(this.auth.currentUser?.id ?? purchaseOrder.createdById ?? 1);
     const normalizedLines = lineItems.map((item) => ({
-      ...item,
+      productId: Number(item.productId),
       unitCost: item.unitCost ?? item.unitPrice ?? 0,
       quantity: item.quantity ?? item.orderedQuantity ?? 0,
       receivedQty: item.receivedQty ?? item.receivedQuantity ?? 0
     }));
+    const referenceNumber = purchaseOrder.referenceNumber?.trim();
 
     return this.api.post<PurchaseOrder>('/purchase-orders', {
       purchaseOrder: {
         ...purchaseOrder,
+        referenceNumber: referenceNumber || undefined,
         createdById,
         status: purchaseOrder.status ?? 'DRAFT'
       },
@@ -49,18 +51,27 @@ export class PurchaseOrderService {
   }
 
   approve(id: number): Observable<PurchaseOrder> {
-    return this.api.post<PurchaseOrder>(`/purchase-orders/${id}/approve`, {});
+    return this.api.post<PurchaseOrder>(`/purchase-orders/${id}/approve`, {}, { headers: this.roleHeaders() });
   }
 
   reject(id: number, reason: string): Observable<PurchaseOrder> {
-    return this.api.post<PurchaseOrder>(`/purchase-orders/${id}/reject`, { reason });
+    return this.api.post<PurchaseOrder>(`/purchase-orders/${id}/reject`, { reason }, { headers: this.roleHeaders() });
   }
 
   receive(id: number, receivedItems: Partial<PurchaseOrderLineItem>[]): Observable<PurchaseOrder> {
-    return this.api.post<PurchaseOrder>(`/purchase-orders/${id}/receive`, { receivedItems });
+    return this.api.post<PurchaseOrder>(`/purchase-orders/${id}/receive`, {
+      receivedItems: receivedItems.map((item) => ({
+        productId: Number(item.productId),
+        receivedQty: item.receivedQty ?? item.receivedQuantity ?? item.quantity ?? 0
+      }))
+    });
   }
 
   cancel(id: number, reason: string): Observable<PurchaseOrder> {
     return this.api.post<PurchaseOrder>(`/purchase-orders/${id}/cancel`, { reason });
+  }
+
+  private roleHeaders(): Record<string, string> {
+    return { 'X-User-Role': this.auth.currentUser?.role ?? 'STAFF' };
   }
 }

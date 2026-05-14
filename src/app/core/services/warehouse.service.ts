@@ -48,4 +48,27 @@ export class WarehouseService {
       null
     );
   }
+
+  reserveStock(warehouseId: number, productId: number, quantity: number): Observable<StockLevel> {
+    return this.api.post<StockLevel>(
+      `/stock/reserve?warehouseId=${warehouseId}&productId=${productId}&quantity=${quantity}`,
+      null
+    );
+  }
+
+  releaseReservation(warehouseId: number, productId: number, quantity: number): Observable<StockLevel> {
+    return this.api.post<StockLevel>(
+      `/stock/release?warehouseId=${warehouseId}&productId=${productId}&quantity=${quantity}`,
+      null
+    );
+  }
+
+  transferStock(fromWarehouseId: number, toWarehouseId: number, productId: number, quantity: number): Observable<Record<string, string>> {
+    return this.api.post<Record<string, string>>('/stock/transfer', {
+      fromWarehouseId,
+      toWarehouseId,
+      productId,
+      quantity
+    });
+  }
 }

@@ -6,6 +6,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
+import { Router } from '@angular/router';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { catchError, forkJoin, map, of } from 'rxjs';
@@ -38,6 +39,8 @@ interface AlertItem {
 }
 
 interface LowStockItem {
+  productId?: number;
+  warehouseId?: number;
   sku: string;
   product: string;
   warehouse: string;
@@ -73,6 +76,7 @@ export class DashboardPageComponent {
   private readonly movements = inject(MovementService);
   private readonly alerts = inject(AlertService);
   private readonly reports = inject(ReportService);
+  private readonly router = inject(Router);
 
   readonly lowStockColumns = ['product', 'warehouse', 'available', 'reorderPoint', 'status', 'action'];
   readonly dataSource = signal<'backend' | 'empty'>('empty');
@@ -267,6 +271,35 @@ export class DashboardPageComponent {
     }[status];
   }
 
+  viewAllAlerts(): void {
+    void this.router.navigate(['/alerts']);
+  }
+
+  createPurchaseOrder(): void {
+    void this.router.navigate(['/purchase-orders']);
+  }
+
+  openLowStockItem(item: LowStockItem): void {
+    void this.router.navigate(['/products'], { queryParams: { q: item.sku || item.product } });
+  }
+
+  exportReport(): void {
+    const generatedAt = new Date().toISOString();
+    const rows = [
+      ['Section', 'Metric', 'Value', 'Detail'],
+      ...this.kpis().map((card) => ['KPI', card.label, card.value, `${card.trend} | ${card.detail}`]),
+      ...this.lowStockItems().map((item) => [
+        'Low Stock',
+        item.product,
+        String(item.available),
+        `${item.sku} | ${item.warehouse} | reorder ${item.reorderPoint} | ${item.status}`
+      ]),
+      ...this.recentAlerts().map((alert) => ['Alert', alert.title, alert.severity, `${alert.description} | ${alert.time}`])
+    ];
+    const csv = rows.map((row) => row.map((cell) => this.csvCell(cell)).join(',')).join('\r\n');
+    this.downloadTextFile(`stockpro-dashboard-${generatedAt.slice(0, 10)}.csv`, csv, 'text/csv;charset=utf-8');
+  }
+
   private toDashboardState(data: {
     products: Product[];
     lowProducts: Product[];
@@ -286,7 +319,8 @@ export class DashboardPageComponent {
     categoryChartData: ChartConfiguration<'doughnut'>['data'];
   } {
     const inventoryValue = data.stockValue?.totalStockValue ?? this.estimateInventoryValue(data.products);
-    const lowStockCount = Math.max(data.lowProducts.length, data.lowStock.length);
+    const lowStockItems = this.lowStockFromBackend(data.lowProducts, data.lowStock, data.products, data.warehouses);
+    const lowStockCount = lowStockItems.length;
     const openPurchaseOrders = data.purchaseOrders.filter((po) => !['RECEIVED', 'CANCELLED', 'REJECTED'].includes(po.status)).length;
     const committedPoValue = data.purchaseOrders
       .filter((po) => !['RECEIVED', 'CANCELLED', 'REJECTED'].includes(po.status))
@@ -344,7 +378,7 @@ export class DashboardPageComponent {
         severity: this.alertSeverity(alert.severity),
         icon: alert.severity === 'CRITICAL' ? 'priority_high' : alert.severity === 'WARNING' ? 'approval' : 'info'
       })),
-      lowStockItems: this.lowStockFromBackend(data.lowProducts, data.lowStock, data.products, data.warehouses),
+      lowStockItems,
       chartData: {
         ...this.stockValueChartData(),
         datasets: this.stockValueChartData().datasets.map((dataset, index) => ({
@@ -360,32 +394,52 @@ export class DashboardPageComponent {
 
   private lowStockFromBackend(lowProducts: Product[], stock: StockLevel[], products: Product[], warehouses: Warehouse[]): LowStockItem[] {
     const productMap = new Map(products.map((product) => [product.productId, product]));
-    const lowProductRows = lowProducts.slice(0, 6).map((product) => ({
-      sku: product.sku,
-      product: product.name,
-      warehouse: 'All warehouses',
-      available: 0,
-      reorderPoint: Math.max(product.reorderLevel, 1),
-      status: 'Critical' as const
-    }));
+    const warehouseMap = new Map(warehouses.map((warehouse) => [warehouse.warehouseId, warehouse]));
+    const rows = new Map<string, LowStockItem>();
 
-    const stockRows = stock.slice(0, 6).map((item) => {
+    stock.forEach((item) => {
       const product = productMap.get(item.productId);
-      const warehouse = warehouses.find((entry) => entry.warehouseId === item.warehouseId);
-      const available = item.availableQuantity ?? item.quantity - item.reservedQuantity;
-      const reorderPoint = Math.max(product?.reorderLevel ?? item.quantity + item.reservedQuantity, 1);
+      const warehouse = warehouseMap.get(item.warehouseId);
+      const available = Math.max(item.availableQuantity ?? item.quantity - (item.reservedQuantity || 0), 0);
+      const reorderPoint = Math.max(product?.reorderLevel ?? available, 1);
 
-      return {
+      if (available > reorderPoint) {
+        return;
+      }
+
+      rows.set(`${item.warehouseId}:${item.productId}`, {
+        productId: item.productId,
+        warehouseId: item.warehouseId,
         sku: product?.sku ?? `PID-${item.productId}`,
         product: product?.name ?? `Product ${item.productId}`,
         warehouse: warehouse?.name ?? `Warehouse ${item.warehouseId}`,
         available,
         reorderPoint,
         status: available <= reorderPoint * 0.25 ? 'Critical' as const : available <= reorderPoint ? 'Low' as const : 'Watch' as const
-      };
+      });
     });
 
-    return [...stockRows, ...lowProductRows].slice(0, 6);
+    const stockedProductIds = new Set([...rows.values()].map((row) => row.productId));
+    lowProducts.forEach((product) => {
+      if (stockedProductIds.has(product.productId)) {
+        return;
+      }
+
+      rows.set(`all:${product.productId}`, {
+        productId: product.productId,
+        sku: product.sku,
+        product: product.name,
+        warehouse: 'All warehouses',
+        available: 0,
+        reorderPoint: Math.max(product.reorderLevel, 1),
+        status: 'Critical'
+      });
+    });
+
+    const rank: Record<LowStockItem['status'], number> = { Critical: 0, Low: 1, Watch: 2 };
+    return [...rows.values()]
+      .sort((a, b) => rank[a.status] - rank[b.status] || a.available - b.available || a.product.localeCompare(b.product))
+      .slice(0, 6);
   }
 
   private estimateInventoryValue(products: Product[]): number {
@@ -456,5 +510,19 @@ export class DashboardPageComponent {
     }
 
     return `${Math.floor(minutes / 60)} hr ago`;
+  }
+
+  private csvCell(value: string): string {
+    return `"${String(value ?? '').replace(/"/g, '""')}"`;
+  }
+
+  private downloadTextFile(filename: string, content: string, type: string): void {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 }

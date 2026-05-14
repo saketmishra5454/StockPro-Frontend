@@ -7,6 +7,10 @@ import { ApiService } from './api.service';
 export class AlertService {
   private readonly api = inject(ApiService);
 
+  getAll(): Observable<Alert[]> {
+    return this.api.get<Alert[]>('/alerts', undefined, { silentErrors: true });
+  }
+
   getForRecipient(recipientId: string | number): Observable<Alert[]> {
     return this.api.get<Alert[]>(`/alerts/recipient/${recipientId}`, undefined, { silentErrors: true });
   }
@@ -21,6 +25,19 @@ export class AlertService {
 
   send(alert: Partial<Alert>): Observable<Alert> {
     return this.api.post<Alert>('/alerts', alert);
+  }
+
+  sendBulk(payload: {
+    recipientIds: number[];
+    title: string;
+    message?: string;
+    type?: string;
+    severity?: string;
+    channel?: string;
+    relatedProductId?: number;
+    relatedWarehouseId?: number;
+  }): Observable<Record<string, string>> {
+    return this.api.post<Record<string, string>>('/alerts/bulk', payload);
   }
 
   markAsRead(id: number): Observable<Alert> {
