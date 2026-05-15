@@ -1,0 +1,337 @@
+:host {
+  display: block;
+}
+
+.auth-page {
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(20, 184, 166, 0.13), transparent 28%),
+    linear-gradient(315deg, rgba(37, 120, 232, 0.13), transparent 34%),
+    var(--app-bg);
+}
+
+.auth-grid {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: minmax(30rem, 0.94fr) minmax(0, 1.06fr);
+}
+
+.form-stage {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 1.5rem 2rem;
+}
+
+.form-shell {
+  width: min(100%, 36rem);
+}
+
+.brand-lockup,
+.form-shell__top,
+.role-card,
+.role-grid,
+.access-step,
+.mini-stat {
+  display: flex;
+  align-items: center;
+}
+
+.brand-lockup {
+  gap: 0.85rem;
+  margin-bottom: 1.35rem;
+}
+
+.brand-mark {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 0.95rem;
+  background: linear-gradient(135deg, #2578e8, #14b8a6);
+  box-shadow: 0 18px 42px rgba(20, 184, 166, 0.22);
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.brand-lockup strong {
+  display: block;
+  color: var(--app-text);
+  line-height: 1.1;
+}
+
+.brand-lockup span,
+.form-copy,
+.mini-stat span,
+.access-step span,
+.role-card p,
+.fine-print {
+  color: var(--app-muted);
+}
+
+.form-shell__eyebrow {
+  margin: 0;
+  color: var(--app-accent);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.form-shell h1 {
+  margin: 0.35rem 0 0;
+  color: var(--app-text);
+  font-size: clamp(2.1rem, 5vw, 3.1rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
+.form-copy {
+  margin: 0.75rem 0 1.25rem;
+  max-width: 31rem;
+  font-size: 0.94rem;
+  line-height: 1.7;
+}
+
+.form-panel {
+  border-radius: 1.25rem;
+  padding: 1.35rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.password-meter {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: -0.35rem;
+}
+
+.password-meter__track {
+  height: 0.4rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.password-meter__bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f59e0b, #14b8a6, #2578e8);
+  transition: width 180ms ease;
+}
+
+.password-meter small {
+  color: var(--app-muted);
+  font-weight: 700;
+}
+
+.submit-button {
+  width: 100%;
+}
+
+.fine-print {
+  margin: 1rem 0 0;
+  text-align: center;
+}
+
+.text-link {
+  color: var(--app-accent);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.text-link:hover {
+  color: #14b8a6;
+}
+
+.brand-panel {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 2rem 3rem;
+  background:
+    linear-gradient(145deg, rgba(12, 34, 51, 0.98), rgba(15, 23, 42, 0.97) 58%, rgba(23, 37, 84, 0.96)),
+    #0f172a;
+  color: #ffffff;
+}
+
+.brand-panel::before {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 3.25rem 3.25rem;
+  mask-image: linear-gradient(245deg, #000 0%, transparent 78%);
+  content: '';
+}
+
+.brand-panel::after {
+  position: absolute;
+  inset: auto auto 8rem -7rem;
+  width: 34rem;
+  height: 34rem;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  transform: rotate(-20deg);
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.22), rgba(37, 120, 232, 0.16));
+  content: '';
+}
+
+.brand-story,
+.access-map,
+.brand-metrics {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.72);
+  padding: 0 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  backdrop-filter: blur(18px);
+}
+
+.brand-story h2 {
+  margin: 1rem 0 0;
+  max-width: 40rem;
+  color: #ffffff;
+  font-size: clamp(2.7rem, 4.5vw, 4.65rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.02;
+}
+
+.brand-story p {
+  margin: 1rem 0 0;
+  max-width: 38rem;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.access-map {
+  display: grid;
+  gap: 0.7rem;
+  width: min(35rem, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.5rem;
+  background: rgba(15, 23, 42, 0.46);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(20px);
+  padding: 0.9rem;
+}
+
+.access-step {
+  gap: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.75rem 0.85rem;
+}
+
+.access-step mat-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: 0.8rem;
+  background: rgba(37, 120, 232, 0.16);
+  color: #93c5fd;
+}
+
+.access-step strong {
+  display: block;
+  color: #ffffff;
+  font-size: 0.92rem;
+}
+
+.access-step span {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.brand-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.mini-stat {
+  min-width: 0;
+  gap: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.75rem;
+  backdrop-filter: blur(18px);
+}
+
+.mini-stat mat-icon {
+  color: #5eead4;
+}
+
+.mini-stat strong {
+  display: block;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.mini-stat span {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+::ng-deep .auth-page .mat-mdc-form-field-subscript-wrapper {
+  min-height: 1.15rem;
+}
+
+@media (max-width: 1100px) {
+  .auth-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-panel {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .form-stage {
+    align-items: start;
+    padding: 1rem;
+  }
+
+  .form-panel {
+    padding: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

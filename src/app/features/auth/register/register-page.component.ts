@@ -1,7 +1,7 @@
 import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize, switchMap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,6 +19,7 @@ import { NotificationService } from '@core/services/notification.service';
   standalone: true,
   imports: [NgFor, NgIf, ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule],
   templateUrl: './register-page.component.html',
+  styleUrl: './register-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegisterPageComponent {
@@ -30,13 +31,33 @@ export class RegisterPageComponent {
   readonly roles: UserRole[] = ['ADMIN', 'MANAGER', 'STAFF', 'OFFICER'];
   readonly loading = signal(false);
   readonly hidePassword = signal(true);
+  readonly passwordScore = signal(0);
+  readonly passwordStrengthLabel = signal('Use uppercase, number, and symbol');
+  readonly roleLabels: Record<UserRole, string> = {
+    ADMIN: 'Administrator',
+    MANAGER: 'Inventory Manager',
+    STAFF: 'Warehouse Staff',
+    OFFICER: 'Purchase Officer'
+  };
 
   readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
+    phone: ['', [Validators.pattern(/^[+()\-\s\d]{7,20}$/)]],
+    password: ['', [Validators.required, Validators.minLength(8), this.strongPasswordValidator]],
+    confirmPassword: ['', [Validators.required]],
     role: this.fb.control<UserRole>('STAFF', [Validators.required])
-  });
+  }, { validators: this.passwordsMatchValidator });
+
+  constructor() {
+    this.form.controls.password.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((password) => {
+      const score = this.scorePassword(password);
+      this.passwordScore.set(score);
+      this.passwordStrengthLabel.set(this.labelForPasswordScore(score));
+      this.form.controls.confirmPassword.updateValueAndValidity({ onlySelf: true, emitEvent: false });
+      this.form.updateValueAndValidity({ onlySelf: true, emitEvent: false });
+    });
+  }
 
   get nameError(): string {
     const control = this.form.controls.name;
@@ -66,6 +87,16 @@ export class RegisterPageComponent {
     return '';
   }
 
+  get phoneError(): string {
+    const control = this.form.controls.phone;
+
+    if (control.hasError('pattern')) {
+      return 'Enter a valid phone number';
+    }
+
+    return '';
+  }
+
   get passwordError(): string {
     const control = this.form.controls.password;
 
@@ -75,6 +106,24 @@ export class RegisterPageComponent {
 
     if (control.hasError('minlength')) {
       return 'Use at least 8 characters';
+    }
+
+    if (control.hasError('weakPassword')) {
+      return 'Use uppercase, a number, and a symbol';
+    }
+
+    return '';
+  }
+
+  get confirmPasswordError(): string {
+    const control = this.form.controls.confirmPassword;
+
+    if (control.hasError('required')) {
+      return 'Confirm your password';
+    }
+
+    if (this.form.hasError('passwordMismatch') && control.touched) {
+      return 'Passwords do not match';
     }
 
     return '';
@@ -92,9 +141,17 @@ export class RegisterPageComponent {
     }
 
     this.loading.set(true);
-    const { email, password, role } = this.form.getRawValue();
+    const { name, email, password, phone, role } = this.form.getRawValue();
+    const payload = {
+      name,
+      fullName: name,
+      email,
+      password,
+      phone: phone || undefined,
+      role
+    };
 
-    this.auth.register(this.form.getRawValue()).pipe(
+    this.auth.register(payload).pipe(
       switchMap(() => this.auth.login({ email, password })),
       finalize(() => this.loading.set(false)),
       takeUntilDestroyed(this.destroyRef)
@@ -119,5 +176,60 @@ export class RegisterPageComponent {
     };
 
     return roleHome[role];
+  }
+
+  private strongPasswordValidator(control: AbstractControl): ValidationErrors | null {
+    const password = String(control.value ?? '');
+
+    if (!password) {
+      return null;
+    }
+
+    const isStrong = /[A-Z]/.test(password) && /\d/.test(password) && /[^A-Za-z0-9]/.test(password);
+
+    return isStrong ? null : { weakPassword: true };
+  }
+
+  private passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const password = control.get('password')?.value;
+    const confirmPasswordControl = control.get('confirmPassword');
+    const confirmPassword = confirmPasswordControl?.value;
+
+    if (!confirmPasswordControl) {
+      return null;
+    }
+
+    const existingErrors = confirmPasswordControl.errors ?? {};
+    const hasMismatch = Boolean(password && confirmPassword && password !== confirmPassword);
+
+    if (hasMismatch) {
+      confirmPasswordControl.setErrors({ ...existingErrors, passwordMismatch: true });
+      return { passwordMismatch: true };
+    }
+
+    if (existingErrors['passwordMismatch']) {
+      const { passwordMismatch, ...remainingErrors } = existingErrors;
+      confirmPasswordControl.setErrors(Object.keys(remainingErrors).length ? remainingErrors : null);
+    }
+
+    return null;
+  }
+
+  private scorePassword(password: string): number {
+    let score = 0;
+
+    if (password.length >= 8) score += 25;
+    if (/[A-Z]/.test(password)) score += 25;
+    if (/\d/.test(password)) score += 25;
+    if (/[^A-Za-z0-9]/.test(password)) score += 25;
+
+    return score;
+  }
+
+  private labelForPasswordScore(score: number): string {
+    if (score >= 100) return 'Strong password';
+    if (score >= 75) return 'Almost there';
+    if (score >= 50) return 'Medium strength';
+    return 'Use uppercase, number, and symbol';
   }
 }

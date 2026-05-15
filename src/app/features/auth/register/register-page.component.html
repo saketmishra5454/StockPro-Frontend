@@ -1,60 +1,98 @@
-<main class="min-h-screen overflow-hidden bg-[var(--app-bg)]">
-  <section class="grid min-h-screen lg:grid-cols-[0.92fr_1.08fr]">
-    <section class="grid min-h-screen place-items-center px-4 py-10 sm:px-6 lg:px-12">
-      <div class="w-full max-w-lg">
-        <div class="mb-8">
-          <div class="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-mint-500 text-xl font-black text-white shadow-soft">S</div>
-          <p class="text-sm font-semibold text-brand-600">StockPro access desk</p>
-          <h1 class="mt-2 text-3xl font-bold text-[var(--app-text)]">Create your account</h1>
-          <p class="mt-2 text-sm leading-6 text-[var(--app-muted)]">Start with a role-aware inventory workspace for your operations team.</p>
+<main class="auth-page">
+  <section class="auth-grid">
+    <section class="form-stage">
+      <div class="form-shell">
+        <div class="brand-lockup">
+          <div class="brand-mark">S</div>
+          <div>
+            <strong>StockPro</strong>
+            <span>Inventory OS</span>
+          </div>
         </div>
 
-        <section class="glass-panel rounded-[1.75rem] p-6 shadow-soft sm:p-8">
-          <form class="grid gap-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-            <mat-form-field appearance="outline">
-              <mat-label>Full name</mat-label>
-              <input matInput formControlName="name" autocomplete="name" [class.opacity-60]="loading()">
-              <mat-icon matSuffix fontSet="material-icons-round">badge</mat-icon>
-              <mat-error>{{ nameError }}</mat-error>
-            </mat-form-field>
+        <p class="form-shell__eyebrow">Access desk</p>
+        <h1>Create your StockPro account</h1>
+        <p class="form-copy">
+          Set up a role-aware workspace for warehouse operations, procurement, product control, and administration.
+        </p>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Work email</mat-label>
-              <input matInput type="email" formControlName="email" autocomplete="email" inputmode="email" [class.opacity-60]="loading()">
-              <mat-icon matSuffix fontSet="material-icons-round">mail</mat-icon>
-              <mat-error>{{ emailError }}</mat-error>
-            </mat-form-field>
+        <section class="form-panel glass-panel">
+          <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Full name</mat-label>
+                <input matInput formControlName="name" autocomplete="name" [class.opacity-60]="loading()">
+                <mat-icon matSuffix fontSet="material-icons-round">badge</mat-icon>
+                <mat-error>{{ nameError }}</mat-error>
+              </mat-form-field>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Password</mat-label>
-              <input
-                matInput
-                [type]="hidePassword() ? 'password' : 'text'"
-                formControlName="password"
-                autocomplete="new-password"
-                [class.opacity-60]="loading()"
-              >
-              <button
-                mat-icon-button
-                matSuffix
-                type="button"
-                [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
-                (click)="togglePasswordVisibility()"
-              >
-                <mat-icon fontSet="material-icons-round">{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
-              </button>
-              <mat-error>{{ passwordError }}</mat-error>
-            </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Work email</mat-label>
+                <input matInput type="email" formControlName="email" autocomplete="email" inputmode="email" [class.opacity-60]="loading()">
+                <mat-icon matSuffix fontSet="material-icons-round">mail</mat-icon>
+                <mat-error>{{ emailError }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Phone</mat-label>
+                <input matInput formControlName="phone" autocomplete="tel" inputmode="tel" [class.opacity-60]="loading()">
+                <mat-icon matSuffix fontSet="material-icons-round">call</mat-icon>
+                <mat-error>{{ phoneError }}</mat-error>
+              </mat-form-field>
+            </div>
 
             <mat-form-field appearance="outline">
               <mat-label>Workspace role</mat-label>
               <mat-select formControlName="role">
-                <mat-option *ngFor="let role of roles" [value]="role">{{ role }}</mat-option>
+                <mat-option *ngFor="let role of roles" [value]="role">{{ roleLabels[role] }}</mat-option>
               </mat-select>
               <mat-icon matSuffix fontSet="material-icons-round">admin_panel_settings</mat-icon>
             </mat-form-field>
 
-            <button mat-flat-button color="primary" class="!mt-2 !h-12 !rounded-xl" type="submit" [disabled]="loading()">
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Password</mat-label>
+                <input
+                  matInput
+                  [type]="hidePassword() ? 'password' : 'text'"
+                  formControlName="password"
+                  autocomplete="new-password"
+                  [class.opacity-60]="loading()"
+                >
+                <button
+                  mat-icon-button
+                  matSuffix
+                  type="button"
+                  [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
+                  (click)="togglePasswordVisibility()"
+                >
+                  <mat-icon fontSet="material-icons-round">{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
+                </button>
+                <mat-error>{{ passwordError }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Confirm password</mat-label>
+                <input
+                  matInput
+                  [type]="hidePassword() ? 'password' : 'text'"
+                  formControlName="confirmPassword"
+                  autocomplete="new-password"
+                  [class.opacity-60]="loading()"
+                >
+                <mat-icon matSuffix fontSet="material-icons-round">lock</mat-icon>
+                <mat-error>{{ confirmPasswordError }}</mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="password-meter" aria-hidden="true">
+              <span class="password-meter__track">
+                <span class="password-meter__bar" [style.width.%]="passwordScore()"></span>
+              </span>
+              <small>{{ passwordStrengthLabel() }}</small>
+            </div>
+
+            <button mat-flat-button color="primary" class="submit-button !h-12 !rounded-xl" type="submit" [disabled]="loading()">
               <span class="inline-flex items-center gap-2">
                 <mat-spinner *ngIf="loading()" diameter="18"></mat-spinner>
                 {{ loading() ? 'Creating workspace...' : 'Create account' }}
@@ -62,51 +100,75 @@
             </button>
           </form>
 
-          <p class="mt-6 text-center text-sm text-[var(--app-muted)]">
+          <p class="fine-print">
             Already have an account?
-            <a class="font-semibold text-brand-600 hover:text-brand-500" routerLink="/auth/login">Sign in</a>
+            <a class="text-link" routerLink="/auth/login">Sign in</a>
           </p>
         </section>
       </div>
     </section>
 
-    <aside class="relative hidden overflow-hidden bg-slate-950 px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_22%_20%,rgba(20,184,166,0.40),transparent_28rem),radial-gradient(circle_at_82%_68%,rgba(37,120,232,0.40),transparent_30rem)]"></div>
-      <div class="absolute left-12 top-32 h-72 w-[28rem] rounded-[2rem] border border-white/10 bg-white/10 shadow-2xl backdrop-blur-2xl"></div>
-      <div class="absolute bottom-20 right-16 h-56 w-80 rounded-[2rem] border border-white/10 bg-mint-500/20 shadow-2xl backdrop-blur-2xl"></div>
-
-      <div class="relative z-10 flex items-center gap-3">
-        <div class="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-mint-500 text-xl font-black shadow-soft">S</div>
-        <div>
-          <strong class="block text-lg">StockPro</strong>
-          <span class="text-sm text-white/60">Enterprise inventory workspace</span>
-        </div>
-      </div>
-
-      <div class="relative z-10 max-w-2xl">
-        <p class="mb-5 inline-flex rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 backdrop-blur-xl">
-          Role-based access
-        </p>
-        <h2 class="text-5xl font-black leading-tight xl:text-6xl">
-          Give every operator the right console from day one.
-        </h2>
-        <p class="mt-6 max-w-xl text-base leading-7 text-white/68">
-          Admins, managers, staff, and purchase officers land in the workflow that matches their StockPro responsibilities.
+    <aside class="brand-panel">
+      <div class="brand-story">
+        <span class="hero-chip">Role-based inventory workflows</span>
+        <h2>Give each team the console their day actually needs.</h2>
+        <p>
+          StockPro maps administrators, inventory managers, warehouse staff, and purchase officers to focused dashboards and protected workflows.
         </p>
       </div>
 
-      <div class="relative z-10 grid grid-cols-3 gap-4">
-        <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
-          <strong class="block text-2xl">JWT</strong>
-          <span class="text-sm text-white/60">Secured APIs</span>
+      <div class="access-map" aria-hidden="true">
+        <div class="access-step">
+          <mat-icon fontSet="material-icons-round">manage_accounts</mat-icon>
+          <div>
+            <strong>Administrators</strong>
+            <span>Configure users, roles, and platform analytics</span>
+          </div>
         </div>
-        <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
-          <strong class="block text-2xl">4</strong>
-          <span class="text-sm text-white/60">User roles</span>
+        <div class="access-step">
+          <mat-icon fontSet="material-icons-round">query_stats</mat-icon>
+          <div>
+            <strong>Inventory managers</strong>
+            <span>Oversee product health, reports, and reorder signals</span>
+          </div>
         </div>
-        <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
-          <strong class="block text-2xl">Live</strong>
-          <span class="text-sm text-white/60">Service sync</span>
+        <div class="access-step">
+          <mat-icon fontSet="material-icons-round">local_shipping</mat-icon>
+          <div>
+            <strong>Warehouse staff</strong>
+            <span>Record stock movement and day-to-day operations</span>
+          </div>
+        </div>
+        <div class="access-step">
+          <mat-icon fontSet="material-icons-round">assignment_turned_in</mat-icon>
+          <div>
+            <strong>Purchase officers</strong>
+            <span>Manage suppliers and purchase order lifecycles</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="brand-metrics">
+        <div class="mini-stat">
+          <mat-icon fontSet="material-icons-round">hub</mat-icon>
+          <div>
+            <strong>Microservices</strong>
+            <span>Auth, product, warehouse, PO</span>
+          </div>
+        </div>
+        <div class="mini-stat">
+          <mat-icon fontSet="material-icons-round">history</mat-icon>
+          <div>
+            <strong>Audit trail</strong>
+            <span>Every stock movement</span>
+          </div>
+        </div>
+        <div class="mini-stat">
+          <mat-icon fontSet="material-icons-round">warning</mat-icon>
+          <div>
+            <strong>Alerts</strong>
+            <span>Reorder automation ready</span>
+          </div>
         </div>
       </div>
     </aside>

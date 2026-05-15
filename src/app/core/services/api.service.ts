@@ -51,6 +51,7 @@ export class ApiService {
       }
 
       if (Array.isArray(value)) {
+        // Repeat query keys for multi-value filters
         value.forEach((item) => {
           params = params.append(key, String(item));
         });

@@ -37,15 +37,18 @@ export class AuthService {
       email: payload.email,
       passwordHash: payload.passwordHash ?? payload.password,
       role: payload.role,
-      phone: payload.phone,
-      department: payload.department
+      phone: payload.phone
     };
 
     return this.http.post<AuthResponse>(`${environment.apiBaseUrl}/auth/register`, backendPayload);
   }
 
-  resetPassword(email: string, newPassword: string): Observable<Record<string, string>> {
-    return this.http.post<Record<string, string>>(`${environment.apiBaseUrl}/auth/forgot-password`, { email, newPassword });
+  requestPasswordReset(email: string): Observable<Record<string, string>> {
+    return this.http.post<Record<string, string>>(`${environment.apiBaseUrl}/auth/forgot-password`, { email });
+  }
+
+  resetPasswordWithToken(token: string, newPassword: string): Observable<Record<string, string>> {
+    return this.http.post<Record<string, string>>(`${environment.apiBaseUrl}/auth/reset-password`, { token, newPassword });
   }
 
   getUsers(): Observable<UserProfile[]> {
@@ -93,6 +96,7 @@ export class AuthService {
     const user = this.userFromToken(token);
 
     if (!user) {
+      // Clear stale or expired tokens before route guards read auth state
       this.tokenStorage.clear();
     }
 
@@ -103,6 +107,7 @@ export class AuthService {
     try {
       const claims = this.decodeToken(token);
 
+      // JWT exp is in seconds; browser time is in milliseconds
       if (claims.exp && Date.now() >= claims.exp * 1000) {
         return null;
       }

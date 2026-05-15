@@ -28,6 +28,7 @@ import { NotificationService } from '@core/services/notification.service';
     MatProgressSpinnerModule
   ],
   templateUrl: './login-page.component.html',
+  styleUrl: './login-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginPageComponent {
@@ -48,8 +49,7 @@ export class LoginPageComponent {
   });
 
   readonly resetForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    newPassword: ['', [Validators.required, Validators.minLength(8)]]
+    email: ['', [Validators.required, Validators.email]]
   });
 
   constructor() {
@@ -102,20 +102,6 @@ export class LoginPageComponent {
     return '';
   }
 
-  get resetPasswordError(): string {
-    const control = this.resetForm.controls.newPassword;
-
-    if (control.hasError('required')) {
-      return 'New password is required';
-    }
-
-    if (control.hasError('minlength')) {
-      return 'Use at least 8 characters';
-    }
-
-    return '';
-  }
-
   togglePasswordVisibility(): void {
     this.hidePassword.update((value) => !value);
   }
@@ -128,17 +114,17 @@ export class LoginPageComponent {
   resetPassword(): void {
     if (this.resetForm.invalid) {
       this.resetForm.markAllAsTouched();
-      this.notifications.error('Please enter a valid email and new password.');
+      this.notifications.error('Please enter a valid account email.');
       return;
     }
 
     this.resetting.set(true);
-    const { email, newPassword } = this.resetForm.getRawValue();
+    const { email } = this.resetForm.getRawValue();
 
-    this.auth.resetPassword(email, newPassword).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.auth.requestPasswordReset(email).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.notifications.success('Password reset. You can sign in now.');
-        this.form.patchValue({ email, password: newPassword });
+        this.notifications.success('If this email is registered, reset instructions have been sent.');
+        this.form.patchValue({ email });
         this.showReset.set(false);
         this.resetting.set(false);
       },

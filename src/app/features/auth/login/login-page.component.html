@@ -1,63 +1,90 @@
-<main class="min-h-screen overflow-hidden bg-[var(--app-bg)]">
-  <section class="grid min-h-screen lg:grid-cols-[1.08fr_0.92fr]">
-    <aside class="relative hidden overflow-hidden bg-slate-950 px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(37,120,232,0.45),transparent_28rem),radial-gradient(circle_at_82%_72%,rgba(20,184,166,0.34),transparent_30rem)]"></div>
-      <div class="absolute inset-x-10 top-28 h-72 rounded-[2rem] border border-white/10 bg-white/10 shadow-2xl backdrop-blur-2xl"></div>
-      <div class="absolute bottom-24 right-16 h-52 w-72 rounded-[2rem] border border-white/10 bg-brand-500/20 shadow-2xl backdrop-blur-2xl"></div>
-
-      <div class="relative z-10 flex items-center gap-3">
-        <div class="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-mint-500 text-xl font-black shadow-soft">S</div>
+<main class="auth-page">
+  <section class="auth-grid auth-grid--login">
+    <aside class="brand-panel">
+      <div class="brand-lockup">
+        <div class="brand-mark">S</div>
         <div>
-          <strong class="block text-lg">StockPro</strong>
-          <span class="text-sm text-white/60">Inventory Management System</span>
+          <strong>StockPro</strong>
+          <span>Track. Control. Optimise. Grow.</span>
         </div>
       </div>
 
-      <div class="relative z-10 max-w-2xl">
-        <p class="mb-5 inline-flex rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 backdrop-blur-xl">
-          Enterprise inventory control
-        </p>
-        <h1 class="text-5xl font-black leading-tight xl:text-6xl">
-          Run warehouses, purchasing, and stock operations from one calm console.
-        </h1>
-        <p class="mt-6 max-w-xl text-base leading-7 text-white/68">
-          Sign in to monitor SKUs, approve purchase orders, track suppliers, and respond to low-stock alerts across every location.
+      <div class="brand-story">
+        <span class="hero-chip">
+          <mat-icon fontSet="material-icons-round">inventory_2</mat-icon>
+          Inventory command center
+        </span>
+        <h1>Complete stock visibility without operational noise.</h1>
+        <p>
+          Manage products, warehouses, procurement, stock movements, alerts, and audit trails from one role-aware workspace built for mid-size businesses.
         </p>
       </div>
 
-      <div class="relative z-10 grid grid-cols-3 gap-4">
-        <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
-          <strong class="block text-2xl">12.8k</strong>
-          <span class="text-sm text-white/60">Active SKUs</span>
+      <div class="ops-preview" aria-hidden="true">
+        <div class="ops-preview__header">
+          <strong>Today in operations</strong>
+          <span class="ops-preview__status">Live</span>
         </div>
-        <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
-          <strong class="block text-2xl">99.9%</strong>
-          <span class="text-sm text-white/60">API uptime</span>
+        <div class="inventory-stack">
+          <div class="inventory-row">
+            <mat-icon fontSet="material-icons-round">warehouse</mat-icon>
+            <div>
+              <strong>Multi-warehouse visibility</strong>
+              <span>Stock levels synchronized across locations</span>
+            </div>
+          </div>
+          <div class="inventory-row">
+            <mat-icon fontSet="material-icons-round">shopping_cart_checkout</mat-icon>
+            <div>
+              <strong>Purchase order workflow</strong>
+              <span>Structured approvals and supplier follow-up</span>
+            </div>
+          </div>
+          <div class="inventory-row">
+            <mat-icon fontSet="material-icons-round">notifications_active</mat-icon>
+            <div>
+              <strong>Low-stock alerting</strong>
+              <span>Reorder signals before supply gaps appear</span>
+            </div>
+          </div>
         </div>
-        <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
-          <strong class="block text-2xl">24/7</strong>
-          <span class="text-sm text-white/60">Ops visibility</span>
+      </div>
+
+      <div class="brand-metrics">
+        <div class="metric-tile">
+          <strong>4</strong>
+          <span>Role dashboards</span>
+        </div>
+        <div class="metric-tile">
+          <strong>24/7</strong>
+          <span>Ops visibility</span>
+        </div>
+        <div class="metric-tile">
+          <strong>JWT</strong>
+          <span>Secured APIs</span>
         </div>
       </div>
     </aside>
 
-    <section class="grid min-h-screen place-items-center px-4 py-10 sm:px-6 lg:px-12">
-      <div class="w-full max-w-md">
-        <div class="mb-8 lg:hidden">
-          <div class="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-mint-500 text-xl font-black text-white">S</div>
-          <p class="text-sm font-semibold text-brand-600">StockPro</p>
+    <section class="form-stage">
+      <div class="form-shell">
+        <div class="mobile-brand">
+          <div class="brand-mark">S</div>
+          <div>
+            <strong>StockPro</strong>
+            <span>Inventory OS</span>
+          </div>
         </div>
 
-        <div class="glass-panel rounded-[1.75rem] p-6 shadow-soft sm:p-8">
-          <div class="mb-8">
-            <p class="text-sm font-semibold text-brand-600">Secure workspace login</p>
-            <h2 class="mt-2 text-3xl font-bold text-[var(--app-text)]">Welcome back</h2>
-            <p class="mt-2 text-sm leading-6 text-[var(--app-muted)]">
-              Use your StockPro credentials to access your role-based operations dashboard.
-            </p>
+        <div class="form-shell__top">
+          <div>
+            <p class="form-shell__eyebrow">Secure workspace login</p>
+            <h2>Welcome back</h2>
           </div>
+        </div>
 
-          <form class="grid gap-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <section class="form-panel glass-panel">
+          <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
             <mat-form-field appearance="outline">
               <mat-label>Work email</mat-label>
               <input
@@ -93,15 +120,14 @@
               <mat-error>{{ passwordError }}</mat-error>
             </mat-form-field>
 
-            <div class="flex items-center justify-between gap-4">
+            <div class="auth-actions">
               <mat-checkbox formControlName="rememberDevice" color="primary">Remember this device</mat-checkbox>
-              <div class="flex items-center gap-3">
-                <button class="text-sm font-semibold text-brand-600 hover:text-brand-500" type="button" (click)="toggleReset()">Forgot password?</button>
-                <a class="text-sm font-semibold text-brand-600 hover:text-brand-500" routerLink="/auth/register">Request access</a>
+              <div class="link-group">
+                <button class="text-link" type="button" (click)="toggleReset()">Forgot password?</button>
               </div>
             </div>
 
-            <button mat-flat-button color="primary" class="!mt-2 !h-12 !rounded-xl" type="submit" [disabled]="loading()">
+            <button mat-flat-button color="primary" class="submit-button !h-12 !rounded-xl" type="submit" [disabled]="loading()">
               <span class="inline-flex items-center gap-2">
                 <mat-spinner *ngIf="loading()" diameter="18"></mat-spinner>
                 {{ loading() ? 'Authenticating...' : 'Sign in securely' }}
@@ -109,7 +135,11 @@
             </button>
           </form>
 
-          <form *ngIf="showReset()" class="mt-5 grid gap-4 rounded-2xl border border-slate-200/70 bg-white/45 p-4 dark:border-slate-700/70 dark:bg-slate-900/40" [formGroup]="resetForm" (ngSubmit)="resetPassword()" novalidate>
+          <form *ngIf="showReset()" class="reset-panel" [formGroup]="resetForm" (ngSubmit)="resetPassword()" novalidate>
+            <p class="reset-panel__copy">
+              Enter your account email and we will send password reset instructions if the account exists.
+            </p>
+
             <mat-form-field appearance="outline">
               <mat-label>Account email</mat-label>
               <input matInput type="email" formControlName="email" autocomplete="email" inputmode="email">
@@ -117,42 +147,19 @@
               <mat-error>{{ resetEmailError }}</mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="outline">
-              <mat-label>New password</mat-label>
-              <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="newPassword" autocomplete="new-password">
-              <button
-                mat-icon-button
-                matSuffix
-                type="button"
-                [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
-                (click)="togglePasswordVisibility()"
-              >
-                <mat-icon fontSet="material-icons-round">{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
-              </button>
-              <mat-error>{{ resetPasswordError }}</mat-error>
-            </mat-form-field>
-
             <button mat-stroked-button color="primary" class="!h-11 !rounded-xl" type="submit" [disabled]="resetting()">
               <span class="inline-flex items-center gap-2">
                 <mat-spinner *ngIf="resetting()" diameter="18"></mat-spinner>
-                {{ resetting() ? 'Resetting...' : 'Reset password' }}
+                {{ resetting() ? 'Sending...' : 'Send reset email' }}
               </span>
             </button>
           </form>
 
-          <div class="mt-7 rounded-2xl border border-slate-200/70 bg-white/45 p-4 text-sm text-[var(--app-muted)] dark:border-slate-700/70 dark:bg-slate-900/40">
-            <div class="flex items-start gap-3">
-              <mat-icon class="text-mint-500" fontSet="material-icons-round">verified_user</mat-icon>
-              <p>
-                JWT sessions are stored locally, attached to API requests automatically, and cleared when the server returns an expired or unauthorized response.
-              </p>
-            </div>
-          </div>
-        </div>
+        </section>
 
-        <p class="mt-6 text-center text-sm text-[var(--app-muted)]">
+        <p class="auth-switch">
           New team member?
-          <a class="font-semibold text-brand-600" routerLink="/auth/register">Create an account</a>
+          <a class="text-link" routerLink="/auth/register">Create an account</a>
         </p>
       </div>
     </section>

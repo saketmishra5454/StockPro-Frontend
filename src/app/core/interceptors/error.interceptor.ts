@@ -14,6 +14,7 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
       const silent = request.context.get(SILENT_HTTP_ERRORS);
 
       if (error instanceof HttpErrorResponse) {
+        // Silent requests opt out of global user-facing notifications
         if (error.status === 0) {
           if (!silent) {
             notifications.error('Cannot reach the StockPro API. Please make sure the backend gateway is running on port 8080.');

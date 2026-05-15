@@ -6,6 +6,7 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AuthService);
   const token = auth.token;
   const role = auth.currentUser?.role;
+  // Gateway validates the token and forwards identity headers to backend services
   const authenticatedRequest = token
     ? request.clone({
       setHeaders: {

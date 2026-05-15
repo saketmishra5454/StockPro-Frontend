@@ -12,6 +12,11 @@ export const AUTH_ROUTES: Routes = [
     loadComponent: () => import('./register/register-page.component').then((m) => m.RegisterPageComponent)
   },
   {
+    path: 'reset-password',
+    title: 'Reset Password | StockPro',
+    loadComponent: () => import('./reset-password/reset-password-page.component').then((m) => m.ResetPasswordPageComponent)
+  },
+  {
     path: '',
     pathMatch: 'full',
     redirectTo: 'login'
