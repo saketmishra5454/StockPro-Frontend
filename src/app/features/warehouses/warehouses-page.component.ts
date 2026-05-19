@@ -83,7 +83,7 @@ import { PageHeaderComponent } from '@shared/ui/page-header/page-header.componen
 
             <div class="warehouse-detail" *ngIf="selectedWarehouse() as warehouse; else noWarehouseSelected">
               <div class="detail-tile"><span>Location</span><strong>{{ warehouse.location || 'Unassigned' }}</strong></div>
-              <div class="detail-tile"><span>Capacity</span><strong>{{ warehouse.usedCapacity || 0 }} / {{ warehouse.capacity || 0 }}</strong></div>
+              <div class="detail-tile"><span>Capacity</span><strong>{{ usedCapacity(warehouse) }} / {{ warehouse.capacity || 0 }}</strong></div>
               <div class="detail-tile"><span>Phone</span><strong>{{ warehouse.phone || '-' }}</strong></div>
               <div class="detail-tile"><span>Address</span><strong>{{ warehouse.address || 'Address not set' }}</strong></div>
             </div>
@@ -527,6 +527,7 @@ export class WarehousesPageComponent {
     this.transfer.fromWarehouseId = warehouseId;
     this.transfer.productId = 0;
     this.reservation.productId = 0;
+    this.selectedStock.set([]);
     this.loadStock(warehouseId);
   }
 
@@ -536,7 +537,10 @@ export class WarehousesPageComponent {
       catchError(() => of<StockLevel[]>([])),
       finalize(() => this.stockLoading.set(false)),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe((stock) => this.selectedStock.set(stock));
+    ).subscribe((stock) => {
+      this.selectedStock.set(stock);
+      this.updateWarehouseUsedCapacity(warehouseId, this.totalQuantity(stock));
+    });
   }
 
   saveWarehouse(): void {
@@ -581,7 +585,7 @@ export class WarehousesPageComponent {
       this.notifications.success('Stock transferred.');
       this.transfer.productId = 0;
       this.transfer.quantity = 1;
-      this.loadStock(this.transfer.fromWarehouseId);
+      this.load();
     });
   }
 
@@ -622,7 +626,14 @@ export class WarehousesPageComponent {
   }
 
   capacityPercent(warehouse: Warehouse): number {
-    return warehouse.capacity ? Math.min(Math.round(((warehouse.usedCapacity || 0) / warehouse.capacity) * 100), 100) : 0;
+    return warehouse.capacity ? Math.min(Math.round((this.usedCapacity(warehouse) / warehouse.capacity) * 100), 100) : 0;
+  }
+
+  usedCapacity(warehouse: Warehouse): number {
+    if (warehouse.warehouseId === this.selectedWarehouseId()) {
+      return this.totalQuantity(this.selectedStock());
+    }
+    return warehouse.usedCapacity || 0;
   }
 
   available(stock: StockLevel): number {
@@ -672,5 +683,17 @@ export class WarehousesPageComponent {
 
   private emptyDraft(): Partial<Warehouse> {
     return { name: '', location: '', address: '', managerId: 1, capacity: 0, usedCapacity: 0, phone: '' };
+  }
+
+  private totalQuantity(stock: StockLevel[]): number {
+    return stock.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  }
+
+  private updateWarehouseUsedCapacity(warehouseId: number, usedCapacity: number): void {
+    this.warehouses.update((warehouses) =>
+      warehouses.map((warehouse) =>
+        warehouse.warehouseId === warehouseId ? { ...warehouse, usedCapacity } : warehouse
+      )
+    );
   }
 }
